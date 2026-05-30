@@ -1,0 +1,8 @@
+.git
+node_modules
+.env
+public/history.json
+public/data.json
+history.json
+data.json
+*.log

@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sensus | Couples Language Learning</title>
+  <meta name="description" content="A humanist, editorial language learning companion for couples. Explore stories, comprehension, and conversation together.">
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400;1,500&family=Outfit:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="theme-light">
+  <header class="app-header">
+    <div class="header-container">
+      <div class="brand">
+        <h1 id="app-title" class="brand-title">Sensus</h1>
+        <span class="brand-subtitle">Language Journal for Couples</span>
+      </div>
+      <div class="header-actions">
+        <button id="btn-toggle-theme" class="btn-icon" aria-label="Toggle light/dark context">
+          <svg class="sun-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+          <svg class="moon-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" style="display: none;"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+        </button>
+        <button id="btn-show-settings" class="btn-secondary">Settings</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-main">
+    <!-- Setup Screen -->
+    <section id="screen-setup" class="screen-card">
+      <div class="screen-header">
+        <h2 class="section-title">Configure Your Practice</h2>
+        <p class="section-description">Set up your shared workspace, choose your languages, and configure difficulty.</p>
+      </div>
+      <form id="form-setup" class="setup-form">
+        <div class="form-row">
+          <div class="form-group">
+            <label for="input-partner-a">First Partner</label>
+            <input type="text" id="input-partner-a" placeholder="e.g. Erik" required>
+          </div>
+          <div class="form-group">
+            <label for="input-partner-b">Second Partner</label>
+            <input type="text" id="input-partner-b" placeholder="e.g. Sofia" required>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label for="select-languages">Language Path</label>
+            <select id="select-languages">
+              <option value="german-swedish" selected>German ➔ Swedish (Focus)</option>
+              <option value="swedish-german">Swedish ➔ German</option>
+              <option value="italian-english">Italian ➔ English</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="select-level">CEFR Level</label>
+            <select id="select-level">
+              <option value="A1">A1 — Absolute Beginner</option>
+              <option value="A2">A2 — Elementary</option>
+              <option value="B1">B1 — Intermediate</option>
+              <option value="B2">B2 — Upper Intermediate</option>
+              <option value="C1">C1 — Advanced</option>
+              <option value="C2">C2 — Mastery</option>
+              <option value="C3">C3 — Specialized Literary</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="input-api-key">Gemini 3.5 API Key (Optional)</label>
+          <input type="password" id="input-api-key" placeholder="Enter Gemini API key (or leave empty to use server's .env)">
+          <small class="form-help">Your key is stored locally in your browser and never shared elsewhere.</small>
+        </div>
+
+        <button type="submit" id="btn-start-session" class="btn-primary">Enter Shared Study</button>
+      </form>
+    </section>
+
+    <!-- Session Dashboard (Visible after setup) -->
+    <section id="screen-dashboard" class="dashboard-layout" style="display: none;">
+      
+      <!-- Session Status Bar -->
+      <div class="status-bar">
+        <div class="status-meta">
+          <span id="label-couple-names" class="meta-partners">Partner A & Partner B</span>
+          <span class="meta-divider">|</span>
+          <span id="label-selected-path" class="meta-path">German ➔ Swedish</span>
+          <span class="meta-divider">|</span>
+          <span id="label-selected-level" class="tag tag-sage">B2</span>
+        </div>
+        <button id="btn-edit-setup" class="btn-link">Edit Settings</button>
+      </div>
+
+      <!-- Mode Selector -->
+      <div class="mode-tabs" role="tablist">
+        <button class="tab-btn active" data-mode="story" role="tab" aria-selected="true">Pimsleur Stories</button>
+        <button class="tab-btn" data-mode="vocabulary" role="tab" aria-selected="false">Vocabulary</button>
+        <button class="tab-btn" data-mode="listening" role="tab" aria-selected="false">Listening</button>
+        <button class="tab-btn" data-mode="reading" role="tab" aria-selected="false">Reading Passage</button>
+        <button class="tab-btn" data-mode="conversation" role="tab" aria-selected="false">Conversation Practice</button>
+      </div>
+
+      <!-- Main Study Workspace Container -->
+      <div id="study-workspace" class="workspace-card">
+        <div class="workspace-empty-state">
+          <h3 class="editorial-heading">Begin your shared reflection</h3>
+          <p class="editorial-body">Select a practice mode from the menu above to generate custom, context-rich exercises tailored to your level.</p>
+          <button id="btn-generate-initial" class="btn-primary">Generate Initial Exercise</button>
+        </div>
+      </div>
+
+      <!-- Shared History / Log Book -->
+      <div class="history-section">
+        <h3 class="editorial-heading-small">Journal of Shared Practice</h3>
+        <div id="history-list" class="history-list">
+          <!-- Populated dynamically -->
+          <div class="history-empty">No practice logs recorded yet. Complete an exercise to write in the journal.</div>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- Modal Settings Panel -->
+  <div id="modal-settings" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3 class="modal-title">Settings</h3>
+        <button id="btn-close-modal" class="btn-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <form id="form-settings-modal">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="modal-partner-a">First Partner</label>
+              <input type="text" id="modal-partner-a" required>
+            </div>
+            <div class="form-group">
+              <label for="modal-partner-b">Second Partner</label>
+              <input type="text" id="modal-partner-b" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="modal-languages">Language Path</label>
+              <select id="modal-languages">
+                <option value="german-swedish">German ➔ Swedish</option>
+                <option value="swedish-german">Swedish ➔ German</option>
+                <option value="italian-english">Italian ➔ English</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="modal-level">CEFR Level</label>
+              <select id="modal-level">
+                <option value="A1">A1</option>
+                <option value="A2">A2</option>
+                <option value="B1">B1</option>
+                <option value="B2">B2</option>
+                <option value="C1">C1</option>
+                <option value="C2">C2</option>
+                <option value="C3">C3</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="modal-api-key">Gemini 3.5 API Key</label>
+            <input type="password" id="modal-api-key" placeholder="Enter Gemini API key (or leave empty to use server's .env)">
+          </div>
+          <button type="submit" class="btn-primary">Save and Update</button>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <footer class="app-footer">
+    <div class="footer-container">
+      <p>Sensus — Designed under the philosophy of active joint discovery.</p>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,22 @@
+{
+  "name": "languages",
+  "version": "1.0.0",
+  "description": "Couples Language Learning Application",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "language",
+    "learning",
+    "couples",
+    "german",
+    "swedish",
+    "italian"
+  ],
+  "author": "Erik Thor",
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {}
+}

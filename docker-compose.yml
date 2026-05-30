@@ -1,0 +1,22 @@
+services:
+  web:
+    build: .
+    container_name: language-learning-web
+    restart: unless-stopped
+    expose:
+      - "9100"
+    ports:
+      - "9100:9100"
+    networks:
+      - default
+      - tools_network
+    environment:
+      - PORT=9100
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    volumes:
+      - ./history.json:/app/history.json
+      - .env:/app/.env
+
+networks:
+  tools_network:
+    external: true
