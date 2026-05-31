@@ -344,6 +344,7 @@ Do not output markdown code blocks, just raw JSON. The response MUST be valid JS
 
         callGemini(fullPrompt, apiKey, (err, geminiRes) => {
           if (err) {
+            console.error("[Gemini API Generate Error]:", err);
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ error: 'Gemini API call failed', details: err.message }));
           } else {
@@ -432,6 +433,7 @@ Respond STRICTLY in JSON format with this structure:
 
         callGemini(evaluationPrompt, apiKey, (err, geminiRes) => {
           if (err) {
+            console.error("[Gemini API Evaluate Error]:", err);
             res.writeHead(500, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ error: 'Gemini Evaluation failed', details: err.message }));
           } else {
