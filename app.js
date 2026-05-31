@@ -1323,11 +1323,12 @@ function renderReadingExercise(activeEx) {
   const container = document.getElementById('study-workspace');
   
   let vocabNotesHTML = '';
-  data.vocabularyNotes.forEach(item => {
+  const vocabNotes = data.vocabularyNotes || data.vocabulary_notes || [];
+  vocabNotes.forEach(item => {
     vocabNotesHTML += `
       <div class="vocab-item">
-        <span class="vocab-term">${item.term}</span>
-        <span class="vocab-meaning">${item.meaning}</span>
+        <span class="vocab-term">${item.term || item.word || ''}</span>
+        <span class="vocab-meaning">${item.meaning || item.translation || ''}</span>
       </div>
     `;
   });
@@ -1990,13 +1991,14 @@ function viewHistoryDetail(itemId) {
       html += `<article class="reading-passage" style="font-size: 1.05rem; line-height: 1.7; margin-bottom: 1.5rem;">${data.passage}</article>`;
       html += `<div style="background-color: var(--input-bg); border-left: 3px solid var(--blush-rose); padding: 1rem 1.25rem; border-radius: var(--radius-sm); margin-bottom: 1.5rem; font-style: italic; font-size: 0.95rem;">${data.translation}</div>`;
 
+      const vocabNotes = data.vocabularyNotes || data.vocabulary_notes || [];
       html += `<div class="reading-vocab-notes" style="padding: 1rem; margin: 1rem 0;">
         <div class="reading-vocab-title">Glossary & Nuances</div>
         <div class="vocab-grid" style="font-size: 0.9rem;">
-          ${data.vocabularyNotes.map(v => `
+          ${vocabNotes.map(v => `
             <div class="vocab-item">
-              <span class="vocab-term">${v.term}</span>
-              <span class="vocab-meaning">${v.meaning}</span>
+              <span class="vocab-term">${v.term || v.word || ''}</span>
+              <span class="vocab-meaning">${v.meaning || v.translation || ''}</span>
             </div>
           `).join('')}
         </div>

@@ -266,7 +266,7 @@ Respond STRICTLY in JSON format with this structure:
         } else if (mode === "reading") {
           modePrompt = `Generate a reading comprehension task in ${targetLang} with translations and questions in ${sourceLang}.
 Difficulty level: ${level}.
-Make it an editorial essay style passage (like a short excerpt from a philosophical journal, discussing art, mindfulness, relationships, nature, or time, 100-180 words).
+Make it a real, funny, and engaging everyday story involving a couple (e.g., a humorous miscommunication, a funny cooking disaster, a comical pet scenario, or a silly daily life incident, 100-180 words).
 Respond STRICTLY in JSON format with this structure:
 {
   "title": "Title in ${targetLang}",
