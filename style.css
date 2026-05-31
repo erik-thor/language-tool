@@ -955,3 +955,187 @@ input[type="text"]:focus, input[type="password"]:focus, select:focus, textarea:f
   margin-bottom: 1.5rem;
   font-size: 0.95rem;
 }
+
+/* Custom Styles for Partner-Grading, 20 Vocabulary Cards, and History Modal Review */
+
+.vocab-card-deck {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.vocab-card-item {
+  background-color: var(--card-bg);
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-lg);
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  position: relative;
+  transition: var(--transition);
+}
+
+.vocab-card-item:hover {
+  border-color: var(--blush-rose);
+}
+
+.vocab-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.5rem;
+}
+
+.vocab-answer-block {
+  background-color: var(--input-bg);
+  border-left: 4px solid var(--warm-gold);
+  padding: 1.25rem 1.5rem;
+  border-radius: var(--radius-sm);
+  margin-top: 0.5rem;
+}
+
+.vocab-grade-buttons {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+  justify-content: flex-start;
+  align-items: center;
+}
+
+.btn-vocab-grade {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.55rem 1.25rem;
+  font-size: 0.85rem;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 500;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background-color: transparent;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.btn-vocab-grade:hover {
+  background-color: var(--card-hover);
+}
+
+.btn-vocab-grade.grade-correct.active {
+  background-color: rgba(138, 166, 142, 0.2);
+  border-color: var(--sage);
+  color: #3B5B41;
+}
+
+body.theme-dark .btn-vocab-grade.grade-correct.active {
+  color: var(--warm-ivory);
+  background-color: rgba(138, 166, 142, 0.3);
+}
+
+.btn-vocab-grade.grade-incorrect.active {
+  background-color: rgba(184, 103, 74, 0.2);
+  border-color: var(--terracotta);
+  color: var(--terracotta);
+}
+
+body.theme-dark .btn-vocab-grade.grade-incorrect.active {
+  color: var(--warm-ivory);
+  background-color: rgba(184, 103, 74, 0.3);
+}
+
+.partner-grade-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+}
+
+.btn-grade {
+  width: 100%;
+  text-align: left;
+  padding: 0.75rem 1.25rem;
+  font-size: 0.85rem;
+  font-family: 'Outfit', sans-serif;
+  font-weight: 500;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  background-color: transparent;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.btn-grade:hover {
+  background-color: var(--card-hover);
+  border-color: var(--blush-rose);
+}
+
+.btn-grade.active[data-grade="coherent"] {
+  background-color: rgba(138, 166, 142, 0.2);
+  border-color: var(--sage);
+  color: #3B5B41;
+}
+
+body.theme-dark .btn-grade.active[data-grade="coherent"] {
+  color: var(--warm-ivory);
+  background-color: rgba(138, 166, 142, 0.3);
+}
+
+.btn-grade.active[data-grade="effort"] {
+  background-color: rgba(201, 165, 99, 0.2);
+  border-color: var(--warm-gold);
+  color: #8C6A2E;
+}
+
+body.theme-dark .btn-grade.active[data-grade="effort"] {
+  color: var(--warm-ivory);
+  background-color: rgba(201, 165, 99, 0.3);
+}
+
+.btn-grade.active[data-grade="revisions"] {
+  background-color: rgba(184, 103, 74, 0.2);
+  border-color: var(--terracotta);
+  color: var(--terracotta);
+}
+
+body.theme-dark .btn-grade.active[data-grade="revisions"] {
+  color: var(--warm-ivory);
+  background-color: rgba(184, 103, 74, 0.3);
+}
+
+.btn-small {
+  padding: 0.25rem 0.75rem;
+  font-size: 0.8rem;
+  border-radius: var(--radius-sm);
+}
+
+.review-section-title {
+  font-family: 'Outfit', sans-serif;
+  font-weight: 500;
+  font-size: 1.25rem;
+  margin: 2rem 0 1rem;
+  color: var(--terracotta);
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.5rem;
+}
+
+.review-meta-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.9rem;
+  margin-bottom: 1.5rem;
+  color: var(--text-muted);
+}
+

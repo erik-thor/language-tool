@@ -178,7 +178,7 @@ const server = http.createServer((req, res) => {
     req.on('end', () => {
       try {
         const params = JSON.parse(body);
-        const { mode, level, languagePair, partnerA, partnerB } = params;
+        const { mode, level, languagePair, partnerA, partnerB, theme, historyContext, learnerName, guideName, difficultWords } = params;
 
         // Resolve API key: check header, then body, then server process.env
         const apiKey = req.headers['x-gemini-key'] || params.apiKey || process.env.GEMINI_API_KEY;
@@ -225,23 +225,24 @@ Respond STRICTLY in JSON format with the following structure:
   ]
 }`;
         } else if (mode === "vocabulary") {
-          modePrompt = `Generate 5 vocabulary test questions for learning ${targetLang} vocabulary from ${sourceLang}.
+          modePrompt = `Generate exactly 20 vocabulary test questions for learning ${targetLang} vocabulary from ${sourceLang}.
 Difficulty level: ${level} (CEFR standard).
 Themes should be interesting, humanist, or everyday conversational.
+Ensure that all 20 vocabulary words are unique (do not repeat any target words).
 Respond STRICTLY in JSON format with this structure:
 {
   "questions": [
     {
-      "type": "multiple-choice", // or "fill-in-the-blank"
+      "type": "fill-in-the-blank",
       "word": "The word in ${targetLang}",
       "definition": "The translation or definition in ${sourceLang}",
-      "sentence": "An elegant example sentence in ${targetLang} using the word (use ___ if fill-in-the-blank)",
+      "sentence": "An elegant example sentence in ${targetLang} using the word (use ___ where the word should be)",
       "sentenceTranslation": "The example sentence translated into ${sourceLang}",
-      "options": ["Option A", "Option B", "Option C", "Option D"], // For multiple-choice, include the correct word/phrase and 3 distractors. For fill-in-the-blank, options should be words that could fit syntactically.
-      "correctAnswer": "The exact correct answer (must match one of the options)",
+      "options": ["Option A", "Option B", "Option C", "Option D"], // Include the correct target word and 3 distractors that make grammatical sense.
+      "correctAnswer": "The exact correct answer (must match the correct target word and one of the options)",
       "explanation": "An interesting etymological, cultural, or grammar note about the word in ${sourceLang}"
     }
-    // Exactly 5 objects
+    // Exactly 20 objects
   ]
 }`;
         } else if (mode === "listening") {
@@ -285,29 +286,61 @@ Respond STRICTLY in JSON format with this structure:
   ]
 }`;
         } else if (mode === "conversation") {
-          modePrompt = `Generate a couples conversation practice prompt for learning ${targetLang} from ${sourceLang}.
-Difficulty level: ${level}.
-Setup a scenario where the partners must speak or write answers to interact with each other.
+          modePrompt = `Generate an interactive couples conversation roleplay for learning ${targetLang} from ${sourceLang}.
+Difficulty level: ${level} (CEFR standard).
+The roleplay must be structured so that ${guideName || 'Partner B'} plays the role of the Guide (Expert speaker) who holds the phone, and ${learnerName || 'Partner A'} is the Learner.
+Create a scenario where ${guideName || 'Partner B'} prompts or asks questions to ${learnerName || 'Partner A'} in ${targetLang}, and ${learnerName || 'Partner A'} has to verbally respond in ${targetLang} to complete specific tasks.
+The topic must feel organic, warm, and relational (e.g., shopping at a market, planning an outing, ordering in a local cafe).
 Respond STRICTLY in JSON format with this structure:
 {
-  "topic": "Topic in ${sourceLang}",
-  "scenario": "A descriptive scenario setup in ${sourceLang} (e.g. Discussing what makes a home feel comfortable or sharing childhood memories)",
-  "partnerAPrompt": "Specific instructions or starter questions for ${partnerA || 'Partner A'} in ${sourceLang}",
-  "partnerBPrompt": "Specific instructions or starter questions for ${partnerB || 'Partner B'} in ${sourceLang}",
-  "helperVocabulary": [
-    { "phrase": "Useful phrase in ${targetLang}", "translation": "Translation in ${sourceLang}" }
-  ],
-  "starterPhrases": [
-    "A couple of starter sentence openings in ${targetLang} to help them begin writing"
+  "topic": "Topic name in ${sourceLang}",
+  "scenario": "Detailed scenario setup in ${sourceLang} explaining what role each partner plays. ${guideName || 'Partner B'} is playing [role] and ${learnerName || 'Partner A'} is playing [role].",
+  "learnerRole": "The role the Learner plays in ${sourceLang}",
+  "guideRole": "The role the Guide plays in ${sourceLang}",
+  "steps": [
+    {
+      "guideAction": "Instructions for ${guideName || 'Partner B'} on what to say or ask in ${targetLang} (include a translation in ${sourceLang} in parentheses)",
+      "learnerTask": "Instructions for what ${learnerName || 'Partner A'} has to respond with or accomplish in ${sourceLang}",
+      "tips": [
+        "A useful word or sentence fragment in ${targetLang} with translation in ${sourceLang} in parentheses that the guide can suggest if the learner gets stuck"
+        // Generate exactly 2-3 useful words/phrases for this step
+      ]
+    }
+    // Generate exactly 3 steps in logical timeline order (beginning, middle, conclusion of the roleplay)
   ]
 }`;
+        }
+
+        let themeInstruction = "";
+        if (theme && theme !== "random") {
+          themeInstruction = `\n\nCRITICAL THEME CONSTRAINT: The exercise topic, scenario, and contents MUST strictly revolve around the theme: "${theme}".`;
+        }
+
+        let historyInstruction = "";
+        if (historyContext) {
+          const { pastWords, pastTitles, pastTopics } = historyContext;
+          if (pastWords && pastWords.length > 0) {
+            historyInstruction += `\n- Strictly AVOID duplicating any of these previously practiced vocabulary words: ${pastWords.slice(0, 50).join(', ')}.`;
+          }
+          if ((pastTitles && pastTitles.length > 0) || (pastTopics && pastTopics.length > 0)) {
+            const pastItems = [...(pastTitles || []), ...(pastTopics || [])];
+            historyInstruction += `\n- Strictly AVOID repeating any of these previously done story scenarios, reading passages, or conversation topics: ${pastItems.slice(0, 20).join(', ')}. Make this exercise fresh, distinct, and a logical progression.`;
+          }
+          if (historyInstruction) {
+            historyInstruction = `\n\nHISTORICAL CONTEXT (AVOID REPEATING):${historyInstruction}`;
+          }
+        }
+
+        let reinforceInstruction = "";
+        if (difficultWords && difficultWords.length > 0) {
+          reinforceInstruction = `\n\nREINFORCEMENT WORDS (TRY TO INCORPORATE): The learner has previously struggled with these words. If appropriate for the CEFR level ${level} and topic, try to naturally incorporate/reinforce one or more of these words in this exercise (e.g., in the dialogue, choices, reading passage, or steps/tips): ${difficultWords.slice(0, 30).join(', ')}. Do not force it if it doesn't fit the context, but prioritize them.`;
         }
 
         const systemPrompt = `You are a linguist and designer of a highly polished, editorial language learning curriculum. 
 Your tone is thoughtful, contemplative, and warm, like a designed philosophy journal.
 Do not output markdown code blocks, just raw JSON. The response MUST be valid JSON matching the requested structure.`;
 
-        const fullPrompt = `${systemPrompt}\n\nTask:\n${modePrompt}`;
+        const fullPrompt = `${systemPrompt}${themeInstruction}${historyInstruction}${reinforceInstruction}\n\nTask:\n${modePrompt}`;
 
         callGemini(fullPrompt, apiKey, (err, geminiRes) => {
           if (err) {

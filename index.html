@@ -170,8 +170,24 @@
             <label for="modal-api-key">Gemini 3.5 API Key</label>
             <input type="password" id="modal-api-key" placeholder="Enter Gemini API key (or leave empty to use server's .env)">
           </div>
-          <button type="submit" class="btn-primary">Save and Update</button>
+          <div style="display: flex; gap: 1rem; margin-top: 1.5rem; flex-wrap: wrap;">
+            <button type="submit" class="btn-primary" style="flex: 1; min-width: 150px;">Save and Update</button>
+            <button type="button" id="btn-cancel-settings" class="btn-secondary" style="flex: 1; min-width: 150px;">Go Back to Exercises</button>
+          </div>
         </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal History Detail Panel -->
+  <div id="modal-history-detail" class="modal" style="display: none;">
+    <div class="modal-content" style="max-width: 800px; max-height: 85vh; overflow-y: auto;">
+      <div class="modal-header">
+        <h3 class="modal-title" id="history-detail-title">Exercise Review</h3>
+        <button id="btn-close-history-modal" class="btn-close">&times;</button>
+      </div>
+      <div class="modal-body" id="history-detail-body">
+        <!-- Populated dynamically -->
       </div>
     </div>
   </div>
