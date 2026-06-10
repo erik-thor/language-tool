@@ -68,12 +68,30 @@ function toggleTheme() {
   setTheme(currentTheme === 'dark' ? 'light' : 'dark');
 }
 
-function loadSavedSettings() {
-  state.partnerA = localStorage.getItem('sensus-partner-a') || '';
-  state.partnerB = localStorage.getItem('sensus-partner-b') || '';
-  state.languagePair = localStorage.getItem('sensus-language-pair') || 'german-swedish';
-  state.level = localStorage.getItem('sensus-level') || 'B2';
-  state.apiKey = localStorage.getItem('sensus-api-key') || '';
+async function loadSavedSettings() {
+  try {
+    const response = await fetch('api/settings');
+    if (response.ok) {
+      const data = await response.json();
+      state.partnerA = data.partnerA || '';
+      state.partnerB = data.partnerB || '';
+      state.languagePair = data.languagePair || 'german-swedish';
+      state.level = data.level || 'B2';
+      state.apiKey = data.apiKey || '';
+      state.currentMode = data.currentMode || 'story';
+      if (data.activeExercises) {
+        state.activeExercises = { ...state.activeExercises, ...data.activeExercises };
+      }
+    }
+  } catch (e) {
+    console.error("Failed to load settings from server, falling back to local storage", e);
+    state.partnerA = localStorage.getItem('sensus-partner-a') || '';
+    state.partnerB = localStorage.getItem('sensus-partner-b') || '';
+    state.languagePair = localStorage.getItem('sensus-language-pair') || 'german-swedish';
+    state.level = localStorage.getItem('sensus-level') || 'B2';
+    state.apiKey = localStorage.getItem('sensus-api-key') || '';
+    state.currentMode = localStorage.getItem('sensus-current-mode') || 'story';
+  }
 
   if (state.partnerA && state.partnerB) {
     showDashboard();
@@ -118,21 +136,45 @@ function showDashboard() {
   else if (['B1', 'B2'].includes(state.level)) levelLabel.classList.add('tag-sage');
   else levelLabel.classList.add('tag-slate');
 
-  renderWorkspaceEmptyState();
+  // Sync tab buttons active state
+  const tabs = document.querySelectorAll('.tab-btn');
+  tabs.forEach(t => {
+    if (t.dataset.mode === state.currentMode) {
+      t.classList.add('active');
+      t.setAttribute('aria-selected', 'true');
+    } else {
+      t.classList.remove('active');
+      t.setAttribute('aria-selected', 'false');
+    }
+  });
+
+  if (state.activeExercises[state.currentMode]) {
+    renderActiveExercise(state.currentMode);
+  } else {
+    renderWorkspaceEmptyState();
+  }
 }
 
 function saveSettings(partnerA, partnerB, langPair, level, apiKey) {
+  // Discard cached active exercises if language path or difficulty changes
+  if (state.languagePair !== langPair || state.level !== level) {
+    state.activeExercises = {
+      story: null,
+      vocabulary: null,
+      listening: null,
+      reading: null,
+      conversation: null
+    };
+  }
+
   state.partnerA = partnerA.trim();
   state.partnerB = partnerB.trim();
   state.languagePair = langPair;
   state.level = level;
   state.apiKey = apiKey.trim();
 
-  localStorage.setItem('sensus-partner-a', state.partnerA);
-  localStorage.setItem('sensus-partner-b', state.partnerB);
-  localStorage.setItem('sensus-language-pair', state.languagePair);
-  localStorage.setItem('sensus-level', state.level);
-  localStorage.setItem('sensus-api-key', state.apiKey);
+  // Save new settings to the server
+  saveStateToServer();
 
   showDashboard();
 }
@@ -228,6 +270,32 @@ function compileHistoricalContext() {
   return context;
 }
 
+async function saveStateToServer() {
+  try {
+    // Keep localstorage as a local fallback
+    localStorage.setItem('sensus-active-exercises', JSON.stringify(state.activeExercises));
+    localStorage.setItem('sensus-current-mode', state.currentMode);
+    localStorage.setItem('sensus-partner-a', state.partnerA);
+    localStorage.setItem('sensus-partner-b', state.partnerB);
+    localStorage.setItem('sensus-language-pair', state.languagePair);
+    localStorage.setItem('sensus-level', state.level);
+    localStorage.setItem('sensus-api-key', state.apiKey);
+
+    // Sync to server
+    await apiRequest('api/settings', {
+      partnerA: state.partnerA,
+      partnerB: state.partnerB,
+      languagePair: state.languagePair,
+      level: state.level,
+      apiKey: state.apiKey,
+      currentMode: state.currentMode,
+      activeExercises: state.activeExercises
+    });
+  } catch (e) {
+    console.error("Failed to sync state to server", e);
+  }
+}
+
 // ----------------------------------------------------
 // 3. EVENT LISTENERS
 // ----------------------------------------------------
@@ -300,6 +368,7 @@ function setupEventListeners() {
       tab.classList.add('active');
       tab.setAttribute('aria-selected', 'true');
       state.currentMode = tab.dataset.mode;
+      saveStateToServer();
       if (state.activeExercises[state.currentMode]) {
         renderActiveExercise(state.currentMode);
       } else {
@@ -315,6 +384,13 @@ function setupEventListeners() {
     }
     if (e.target === historyModal) {
       historyModal.style.display = 'none';
+    }
+  });
+
+  // Auto-save active exercises on user interactions within workspace
+  document.getElementById('study-workspace').addEventListener('click', () => {
+    if (state.activeExercises[state.currentMode]) {
+      saveStateToServer();
     }
   });
 }
@@ -554,6 +630,7 @@ async function generateCurrentExercise() {
         };
       }
       
+      saveStateToServer();
       renderActiveExercise(mode);
     } else {
       renderError("Could not retrieve exercise details from Gemini.");
@@ -587,6 +664,7 @@ function setupDiscardButtonListener() {
     btn.addEventListener('click', () => {
       if (confirm("Are you sure you want to discard this exercise and start a new one?")) {
         state.activeExercises[state.currentMode] = null;
+        saveStateToServer();
         renderWorkspaceEmptyState();
       }
     });
@@ -827,6 +905,7 @@ function renderStoryExercise(activeEx) {
     };
     saveToHistory(logRecord);
     state.activeExercises.story = null;
+    saveStateToServer();
     
     container.innerHTML = `
       <div class="success-banner" style="margin-top: 2rem; text-align: center; padding: 3rem;">
@@ -1082,6 +1161,7 @@ function renderVocabularyExercise(activeEx) {
     };
     saveToHistory(logRecord);
     state.activeExercises.vocabulary = null;
+    saveStateToServer();
 
     container.innerHTML = `
       <div class="success-banner" style="margin-top: 2rem; text-align: center; padding: 3rem;">
@@ -1306,6 +1386,7 @@ function renderListeningExercise(activeEx) {
     };
     saveToHistory(logRecord);
     state.activeExercises.listening = null;
+    saveStateToServer();
 
     container.innerHTML = `
       <div class="success-banner" style="margin-top: 2rem; text-align: center; padding: 3rem;">
@@ -1540,6 +1621,7 @@ function renderReadingExercise(activeEx) {
     };
     saveToHistory(logRecord);
     state.activeExercises.reading = null;
+    saveStateToServer();
 
     container.innerHTML = `
       <div class="success-banner" style="margin-top: 2rem; text-align: center; padding: 3rem;">
@@ -1768,6 +1850,7 @@ function renderConversationExercise(activeEx) {
     };
     saveToHistory(logRecord);
     state.activeExercises.conversation = null;
+    saveStateToServer();
 
     container.innerHTML = `
       <div class="success-banner" style="margin-top: 2rem; text-align: center; padding: 3rem;">

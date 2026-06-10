@@ -35,7 +35,6 @@ const MIME_TYPES = {
   '.jpg': 'image/jpeg',
   '.ico': 'image/x-icon'
 };
-
 // Helper: Call Gemini API using https module
 function callGemini(prompt, apiKey, callback) {
   const requestBody = JSON.stringify({
@@ -110,6 +109,93 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  const settingsFilePath = path.join(__dirname, 'settings.json');
+
+  // API Route: GET /api/settings
+  if (req.method === 'GET' && reqUrl === '/api/settings') {
+    if (fs.existsSync(settingsFilePath)) {
+      fs.readFile(settingsFilePath, 'utf8', (err, data) => {
+        if (err) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Failed to read settings.' }));
+        } else {
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(data);
+        }
+      });
+    } else {
+      const defaultSettings = {
+        partnerA: "",
+        partnerB: "",
+        languagePair: "german-swedish",
+        level: "B2",
+        apiKey: "",
+        currentMode: "story",
+        activeExercises: {
+          story: null,
+          vocabulary: null,
+          listening: null,
+          reading: null,
+          conversation: null
+        }
+      };
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(defaultSettings));
+    }
+    return;
+  }
+
+  // API Route: POST /api/settings
+  if (req.method === 'POST' && reqUrl === '/api/settings') {
+    let body = '';
+    req.on('data', chunk => { body += chunk; });
+    req.on('end', () => {
+      try {
+        const newSettings = JSON.parse(body);
+        let currentSettings = {
+          partnerA: "",
+          partnerB: "",
+          languagePair: "german-swedish",
+          level: "B2",
+          apiKey: "",
+          currentMode: "story",
+          activeExercises: {
+            story: null,
+            vocabulary: null,
+            listening: null,
+            reading: null,
+            conversation: null
+          }
+        };
+
+        if (fs.existsSync(settingsFilePath)) {
+          try {
+            currentSettings = JSON.parse(fs.readFileSync(settingsFilePath, 'utf8'));
+          } catch (e) {
+            // keep defaults
+          }
+        }
+
+        // Merge settings
+        const updatedSettings = { ...currentSettings, ...newSettings };
+
+        fs.writeFile(settingsFilePath, JSON.stringify(updatedSettings, null, 2), 'utf8', (err) => {
+          if (err) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Failed to save settings.' }));
+          } else {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ success: true, settings: updatedSettings }));
+          }
+        });
+      } catch (err) {
+        res.writeHead(400, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'Invalid JSON payload' }));
+      }
+    });
+    return;
+  }
+
   const historyFilePath = path.join(__dirname, 'history.json');
 
   // API Route: GET /api/history
@@ -146,11 +232,11 @@ const server = http.createServer((req, res) => {
             history = [];
           }
         }
-        
+
         newRecord.id = Date.now().toString();
         newRecord.timestamp = new Date().toISOString();
         history.unshift(newRecord);
-        
+
         // Limit history records
         if (history.length > 100) history.pop();
 
@@ -293,14 +379,14 @@ Create a scenario where ${guideName || 'Partner B'} prompts or asks questions to
 The topic must feel organic, warm, and relational (e.g., shopping at a market, planning an outing, ordering in a local cafe).
 Respond STRICTLY in JSON format with this structure:
 {
-  "topic": "Topic name in ${sourceLang}",
-  "scenario": "Detailed scenario setup in ${sourceLang} explaining what role each partner plays. ${guideName || 'Partner B'} is playing [role] and ${learnerName || 'Partner A'} is playing [role].",
-  "learnerRole": "The role the Learner plays in ${sourceLang}",
-  "guideRole": "The role the Guide plays in ${sourceLang}",
+  "topic": "Topic name in ${targetLang} (with translation in ${sourceLang} in parentheses)",
+  "scenario": "Detailed scenario setup in ${targetLang} explaining what role each partner plays. ${guideName || 'Partner B'} is playing [role] and ${learnerName || 'Partner A'} is playing [role] (include translation in ${sourceLang} in parentheses).",
+  "learnerRole": "The role the Learner plays in ${targetLang} (with translation in ${sourceLang} in parentheses)",
+  "guideRole": "The role the Guide plays in ${targetLang} (with translation in ${sourceLang} in parentheses)",
   "steps": [
     {
       "guideAction": "Instructions for ${guideName || 'Partner B'} on what to say or ask in ${targetLang} (include a translation in ${sourceLang} in parentheses)",
-      "learnerTask": "Instructions for what ${learnerName || 'Partner A'} has to respond with or accomplish in ${sourceLang}",
+      "learnerTask": "Instructions for what ${learnerName || 'Partner A'} has to respond with or accomplish in ${targetLang} (include a translation in ${sourceLang} in parentheses)",
       "tips": [
         "A useful word or sentence fragment in ${targetLang} with translation in ${sourceLang} in parentheses that the guide can suggest if the learner gets stuck"
         // Generate exactly 2-3 useful words/phrases for this step
@@ -356,7 +442,7 @@ Do not output markdown code blocks, just raw JSON. The response MUST be valid JS
                 return;
               }
               let textContent = geminiData.candidates[0].content.parts[0].text.trim();
-              
+
               // Clean codeblock markers if generated
               if (textContent.startsWith('```json')) {
                 textContent = textContent.substring(7);
@@ -367,7 +453,7 @@ Do not output markdown code blocks, just raw JSON. The response MUST be valid JS
               if (textContent.endsWith('```')) {
                 textContent = textContent.substring(0, textContent.length - 3);
               }
-              
+
               const exerciseObj = JSON.parse(textContent.trim());
               res.writeHead(200, { 'Content-Type': 'application/json' });
               res.end(JSON.stringify({ success: true, data: exerciseObj }));

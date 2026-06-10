@@ -15,6 +15,7 @@ services:
       - GEMINI_API_KEY=${GEMINI_API_KEY}
     volumes:
       - ./history.json:/app/history.json
+      - ./settings.json:/app/settings.json
       - .env:/app/.env
 
 networks:
